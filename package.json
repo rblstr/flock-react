@@ -1,0 +1,24 @@
+{
+  "name": "flock-react",
+  "version": "0.0.1",
+  "description": "A port of Flock to React",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "mkdir -p dist && browserify -d index.js -o dist/index.js -t [babelify --presets [react]]",
+    "start": "static"
+  },
+  "author": "Rob Lester <rblestr@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "react": "^15.3.0",
+    "react-redux": "^4.4.5",
+    "redux": "^3.5.2",
+    "react-dom": "^15.3.0"
+  },
+  "devDependencies": {
+    "babel-preset-react": "^6.11.1",
+    "babelify": "^7.3.0",
+    "browserify": "^13.1.0",
+    "node-static": "^0.7.8"
+  }
+}
