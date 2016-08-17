@@ -7,6 +7,10 @@
     "prestart": "mkdir -p dist && browserify -d index.js -o dist/index.js -t [babelify --presets [react]]",
     "start": "static"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rblstr/flock-react.git"
+  },
   "author": "Rob Lester <rblestr@gmail.com>",
   "license": "ISC",
   "dependencies": {
