@@ -4,7 +4,7 @@ import Track from './Track.jsx'
 export default ({ isFetching, tracks }) => {
     return (
         <div>
-            { isFetching ? <h2>Fecthing...</h2> :
+            { isFetching ? <h2>Fetching...</h2> :
                 <ol>
                     {
                         tracks.map(track => {
