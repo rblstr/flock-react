@@ -1,7 +1,7 @@
 import React from 'react'
 import Track from './Track.jsx'
 
-export default ({ isFetching, tracks }) => {
+export default ({ isFetching, tracks, currentTrack, onPlayTrack }) => {
     return (
         <div>
             { isFetching ? <h2>Fetching...</h2> :
@@ -10,7 +10,7 @@ export default ({ isFetching, tracks }) => {
                         tracks.map(track => {
                             return (
                                 <li key={track.id}>
-                                    <Track track={track} />
+                                    <Track track={track} playing={track.id === currentTrack} onPlayTrack={onPlayTrack}/>
                                 </li>
                             )
                         })
