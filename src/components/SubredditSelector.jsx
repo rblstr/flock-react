@@ -5,7 +5,8 @@ export default ({ subreddits, updateSubreddits, fetchTracks }) => {
         <form onSubmit={e => {
                 e.preventDefault()
                 fetchTracks(subreddits)
-            }}>
+            }}
+        >
             <input
                 type="text"
                 placeholder="subreddits subreddits subreddits ..."

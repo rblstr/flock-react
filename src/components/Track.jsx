@@ -8,10 +8,17 @@ const downvoteStyle = {
     color: '#9494FF'
 }
 
-export default ({ track }) => {
+const playingStyle = {
+    color: '#00FF00'
+}
+
+export default ({ track, playing, onPlayTrack }) => {
     return (
         <div>
-            <span>{track.title}</span>
+            <span
+                style={playing ? playingStyle : {}}
+                onClick={e => onPlayTrack(track)}
+            >{track.title}</span>
             <div>
                 <a href={track.permalink}>Permalink</a>&nbsp;
                 <a href={track.url}>YouTube</a>&nbsp;

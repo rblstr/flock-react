@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import YouTubePlayer from 'youtube-player'
 import URI from 'urijs'
 
-class Player extends Component {
+class Player extends PureComponent {
 
     constructor (props) {
         super(props)
@@ -16,7 +16,7 @@ class Player extends Component {
         const [ videoId, ...playlist ] = tracks
             .map(track => URI(track.url).query(true).v)
 
-        let player = YouTubePlayer(this.playerElement, {
+        this.player = YouTubePlayer(this.playerElement, {
             videoId,
             playerVars: {
                 playlist: playlist.join(',')
@@ -25,8 +25,16 @@ class Player extends Component {
     }
 
     assignPlayerElement (playerElement) {
-        console.log(this, playerElement)
         this.playerElement = playerElement
+    }
+
+    componentWillReceiveProps ({ currentTrack, tracks }) {
+        const ids = tracks
+            .map(track => track.id)
+        if (currentTrack !== this.currentTrack) {
+            this.player.playVideoAt(ids.indexOf(currentTrack))
+            this.currentTrack = currentTrack
+        }
     }
 
     render () {
