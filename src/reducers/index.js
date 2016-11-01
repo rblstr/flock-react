@@ -2,10 +2,10 @@ import { combineReducers } from 'redux'
 
 import subreddits from './subreddits'
 import links from './links'
-import tracks from './tracks'
+import player from './player'
 
 export default combineReducers({
     subreddits,
     links,
-    tracks
+    player
 })

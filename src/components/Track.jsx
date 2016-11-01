@@ -9,16 +9,21 @@ const downvoteStyle = {
 }
 
 const playingStyle = {
-    color: '#00FF00'
+    color: 'goldenrod'
 }
 
-export default ({ track, playing, onPlayTrack }) => {
+const subredditStyle = {
+    color: '#666666',
+    fontStyle: 'italic'
+}
+
+export default ({ track, playing, onTrackClicked }) => {
     return (
         <div>
             <span
                 style={playing ? playingStyle : {}}
-                onClick={e => onPlayTrack(track)}
-            >{track.title}</span>
+                onClick={e => onTrackClicked(track)}
+            >{track.title}</span>&nbsp;<span style={subredditStyle}>{track.subreddit}</span>
             <div>
                 <a href={track.permalink}>Permalink</a>&nbsp;
                 <a href={track.url}>YouTube</a>&nbsp;

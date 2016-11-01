@@ -1,23 +1,30 @@
 import {
-    PLAYER_LOAD,
-    PLAYER_LOADED
+    PLAYER_SET_TRACK,
+    PLAYER_PLAYING,
+    PLAYER_PAUSED
 } from '../actions/player'
 
 const initialState = {
-    isLoading: false
+    isPlaying: false,
+    currentTrack: null
 }
 
 export default (state=initialState, action) => {
     switch (action.type) {
-        case PLAYER_LOAD:
+        case PLAYER_SET_TRACK:
             return {
                 ...state,
-                isLoading: true
+                currentTrack: action.track
             }
-        case PLAYER_LOADED:
+        case PLAYER_PLAYING:
             return {
                 ...state,
-                isLoading: false
+                isPlaying: true
+            }
+        case PLAYER_PAUSED:
+            return {
+                ...state,
+                isPlaying: false
             }
         default:
             return state

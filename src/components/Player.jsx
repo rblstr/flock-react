@@ -2,6 +2,15 @@ import React, { PureComponent } from 'react'
 import YouTubePlayer from 'youtube-player'
 import URI from 'urijs'
 
+export const PlayerState = {
+    UNSTARTED: -1,
+    ENDED: 0,
+    PLAYING: 1,
+    PAUSED: 2,
+    BUFFERING: 3,
+    QUEUED: 4
+}
+
 class Player extends PureComponent {
 
     constructor (props) {
@@ -11,7 +20,7 @@ class Player extends PureComponent {
     }
 
     componentDidMount () {
-        const { tracks } = this.props
+        const { tracks, onPlayerStateChange } = this.props
 
         const [ videoId, ...playlist ] = tracks
             .map(track => URI(track.url).query(true).v)
@@ -22,18 +31,28 @@ class Player extends PureComponent {
                 playlist: playlist.join(',')
             }
         })
+
+        this.player.on('stateChange', e => onPlayerStateChange(e.data))
     }
 
     assignPlayerElement (playerElement) {
         this.playerElement = playerElement
     }
 
-    componentWillReceiveProps ({ currentTrack, tracks }) {
+    componentWillReceiveProps ({ currentTrack, tracks, isPlaying }) {
         const ids = tracks
             .map(track => track.id)
         if (currentTrack !== this.currentTrack) {
             this.player.playVideoAt(ids.indexOf(currentTrack))
             this.currentTrack = currentTrack
+        }
+        if (isPlaying !== this.isPlaying) {
+            if (isPlaying) {
+                this.player.playVideo()
+            } else {
+                this.player.pauseVideo()
+            }
+            this.isPlaying = isPlaying
         }
     }
 

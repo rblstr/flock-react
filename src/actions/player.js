@@ -1,23 +1,29 @@
-export const PLAYER_LOAD = "PLAYER_LOAD"
-export const PLAYER_LOADED = "PLAYER_LOADED"
+export const PLAYER_SET_TRACK = 'PLAYER_SET_TRACK'
+export const PLAYER_PLAYING = 'PLAYER_PLAYING'
+export const PLAYER_PAUSED = 'PLAYER_PAUSED'
 
-export const loadPlayer = () => {
+export const playTrack = (track) => {
     return dispatch => {
-        dispatch(startPlayerLoad())
-        const player
-        dispatch(playerLoaded(player))
+        dispatch(setTrack(track))
+        dispatch(playing())
     }
 }
 
-const startPlayerLoad = () => {
+export const setTrack = (track) => {
     return {
-        type: PLAYER_LOAD
+        type: PLAYER_SET_TRACK,
+        track: track.id
     }
 }
 
-const playerLoaded = (player) => {
+export const playing = () => {
     return {
-        type: PLAYER_LOADED,
-        player
+        type: PLAYER_PLAYING
+    }
+}
+
+export const paused = () => {
+    return {
+        type: PLAYER_PAUSED
     }
 }
