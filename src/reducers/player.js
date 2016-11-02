@@ -4,6 +4,10 @@ import {
     PLAYER_PAUSED
 } from '../actions/player'
 
+import {
+    LINKS_RECIEVED
+} from '../actions/links'
+
 const initialState = {
     isPlaying: false,
     currentTrack: null
@@ -25,6 +29,11 @@ export default (state=initialState, action) => {
             return {
                 ...state,
                 isPlaying: false
+            }
+        case LINKS_RECIEVED:
+            return {
+                ...state,
+                currentTrack: action.links[0].id
             }
         default:
             return state

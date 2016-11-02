@@ -29,7 +29,7 @@ const Flock = ({ dispatch, subreddits, isFetching, links, error, currentTrack, i
                                 console.log(state)
                                 break
                             case PlayerState.ENDED:
-                                console.log(state)
+                                dispatch(paused())
                                 break
                             case PlayerState.PLAYING:
                                 dispatch(playing())

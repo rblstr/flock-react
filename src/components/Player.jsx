@@ -32,6 +32,8 @@ class Player extends PureComponent {
             }
         })
 
+        this.currentTrack = tracks[0].id
+
         this.player.on('stateChange', e => onPlayerStateChange(e.data))
     }
 
@@ -46,14 +48,17 @@ class Player extends PureComponent {
             this.player.playVideoAt(ids.indexOf(currentTrack))
             this.currentTrack = currentTrack
         }
-        if (isPlaying !== this.isPlaying) {
-            if (isPlaying) {
-                this.player.playVideo()
-            } else {
-                this.player.pauseVideo()
-            }
-            this.isPlaying = isPlaying
-        }
+        this.player.getPlayerState()
+            .then(state => {
+                const playerIsPlaying = (state === PlayerState.PLAYING)
+                if (isPlaying !== playerIsPlaying) {
+                    if (isPlaying) {
+                        this.player.playVideo()
+                    } else {
+                        this.player.pauseVideo()
+                    }
+                }
+            })
     }
 
     render () {
