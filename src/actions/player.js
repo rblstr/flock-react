@@ -1,29 +1,25 @@
-export const PLAYER_SET_TRACK = 'PLAYER_SET_TRACK'
-export const PLAYER_PLAYING = 'PLAYER_PLAYING'
-export const PLAYER_PAUSED = 'PLAYER_PAUSED'
+export const PlayerState = {
+    UNSTARTED: -1,
+    ENDED: 0,
+    PLAYING: 1,
+    PAUSED: 2,
+    BUFFERING: 3,
+    QUEUED: 4
+}
 
-export const playTrack = (track) => {
-    return dispatch => {
-        dispatch(setTrack(track))
-        dispatch(playing())
+export const PLAYER_SET_STATE = 'PLAYER_SET_STATE'
+export const PLAYER_SET_CURRENT_TRACK = 'PLAYER_SET_CURRENT_TRACK'
+
+export const setPlayerState = (state) => {
+    return {
+        type: PLAYER_SET_STATE,
+        state
     }
 }
 
-export const setTrack = (track) => {
+export const setPlayerCurrentTrack = (track) => {
     return {
-        type: PLAYER_SET_TRACK,
+        type: PLAYER_SET_CURRENT_TRACK,
         track: track.id
-    }
-}
-
-export const playing = () => {
-    return {
-        type: PLAYER_PLAYING
-    }
-}
-
-export const paused = () => {
-    return {
-        type: PLAYER_PAUSED
     }
 }

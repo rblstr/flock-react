@@ -3,13 +3,13 @@ import { connect } from 'react-redux'
 
 import { updateSubreddits } from '../actions/subreddits'
 import { fetchLinks } from '../actions/links'
-import { playTrack, setTrack, playing, paused } from '../actions/player'
+import { setPlayerState, setPlayerCurrentTrack } from '../actions/player'
 
 import SubredditSelector from '../components/SubredditSelector.jsx'
-import Player, { PlayerState } from '../components/Player.jsx'
+import Player from '../components/Player.jsx'
 import TrackList from '../components/TrackList.jsx'
 
-const Flock = ({ dispatch, subreddits, isFetching, links, error, currentTrack, isPlaying }) => {
+const Flock = ({ dispatch, subreddits, isFetching, links, error, playerState }) => {
     return (
         <div>
             <h1>Flock</h1>
@@ -21,32 +21,9 @@ const Flock = ({ dispatch, subreddits, isFetching, links, error, currentTrack, i
             { links && links.length > 1 &&
                 <Player
                     tracks={links}
-                    currentTrack={currentTrack}
-                    isPlaying={isPlaying}
-                    onPlayerStateChange={state => {
-                        switch (state) {
-                            case PlayerState.UNSTARTED:
-                                console.log(state)
-                                break
-                            case PlayerState.ENDED:
-                                dispatch(paused())
-                                break
-                            case PlayerState.PLAYING:
-                                dispatch(playing())
-                                break
-                            case PlayerState.PAUSED:
-                                dispatch(paused())
-                                break
-                            case PlayerState.BUFFERING:
-                                console.log(state)
-                                break
-                            case PlayerState.QUEUED:
-                                console.log(state)
-                                break
-                            default:
-                                break
-                        }
-                    }}
+                    currentTrack={playerState.currentTrack}
+                    onPlayerStateChange={state => dispatch(setPlayerState(state))}
+                    onTrackChange={track => dispatch(setPlayerCurrentTrack(track))}
                 />
             }
             { !error ?
@@ -54,17 +31,11 @@ const Flock = ({ dispatch, subreddits, isFetching, links, error, currentTrack, i
                     isFetching={isFetching}
                     tracks={links}
                     onTrackClicked={track => {
-                        if (track.id === currentTrack) {
-                            if (isPlaying) {
-                                dispatch(paused())
-                            } else {
-                                dispatch(playing())
-                            }
-                        } else {
-                            dispatch(playTrack(track))
+                        if (playerState.currentTrack !== track.id) {
+                            dispatch(setPlayerCurrentTrack(track))
                         }
                     }}
-                    currentTrack={currentTrack}
+                    currentTrack={playerState.currentTrack}
                 />
                 : <div style={{color: 'red'}}>
                     {error}
@@ -81,8 +52,7 @@ const mapStateToProps = ({ subreddits, links, player }) => {
         isFetching: links.isFetching,
         links: links.links,
         error: links.error,
-        currentTrack: player.currentTrack,
-        isPlaying: player.isPlaying
+        playerState: player
     }
 }
 

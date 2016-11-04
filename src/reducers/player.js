@@ -1,39 +1,25 @@
 import {
-    PLAYER_SET_TRACK,
-    PLAYER_PLAYING,
-    PLAYER_PAUSED
+    PlayerState,
+    PLAYER_SET_STATE,
+    PLAYER_SET_CURRENT_TRACK
 } from '../actions/player'
 
-import {
-    LINKS_RECIEVED
-} from '../actions/links'
-
 const initialState = {
-    isPlaying: false,
+    state: PlayerState.UNSTARTED,
     currentTrack: null
 }
 
 export default (state=initialState, action) => {
     switch (action.type) {
-        case PLAYER_SET_TRACK:
+        case PLAYER_SET_STATE:
+            return {
+                ...state,
+                state: action.state
+            }
+        case PLAYER_SET_CURRENT_TRACK:
             return {
                 ...state,
                 currentTrack: action.track
-            }
-        case PLAYER_PLAYING:
-            return {
-                ...state,
-                isPlaying: true
-            }
-        case PLAYER_PAUSED:
-            return {
-                ...state,
-                isPlaying: false
-            }
-        case LINKS_RECIEVED:
-            return {
-                ...state,
-                currentTrack: action.links[0].id
             }
         default:
             return state
