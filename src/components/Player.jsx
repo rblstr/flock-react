@@ -2,28 +2,30 @@ import React, { PureComponent } from 'react'
 import YouTubePlayer from 'youtube-player'
 import URI from 'urijs'
 
-export const PlayerState = {
-    UNSTARTED: -1,
-    ENDED: 0,
-    PLAYING: 1,
-    PAUSED: 2,
-    BUFFERING: 3,
-    QUEUED: 4
-}
+import { PlayerState } from '../actions/player'
 
 class Player extends PureComponent {
 
     constructor (props) {
         super(props)
 
+        this.state = { currentTrack: null, state: PlayerState.UNSTARTED }
         this._assignPlayerElement = ref => this.assignPlayerElement(ref)
     }
 
     componentDidMount () {
-        const { tracks, onPlayerStateChange } = this.props
+        const {
+            tracks,
+            onPlayerStateChange,
+            onTrackChange
+        } = this.props
+
+        const trackToVideoId = track => new URI(track.url).query(true).v
+        const videoIdToTrack = id => track => new URI(track.url).query(true).v === id
 
         const [ videoId, ...playlist ] = tracks
-            .map(track => URI(track.url).query(true).v)
+            .map(trackToVideoId)
+            .map(id => id.substring(0, 11)) // Because https://www.youtube.com/watch?v=zhgwRBb48VI?new
 
         this.player = YouTubePlayer(this.playerElement, {
             videoId,
@@ -32,33 +34,34 @@ class Player extends PureComponent {
             }
         })
 
-        this.currentTrack = tracks[0].id
+        this.player.on('stateChange', event => {
+            const { data: state } = event
+            this.player.getVideoUrl().then(url => {
+                const videoId = new URI(url).query(true).v
+                const track = tracks.find(videoIdToTrack(videoId))
+                if (track.id != this.state.currentTrack) {
+                    onTrackChange(track)
+                    this.setState({currentTrack: track.id})
+                }
+            })
+            this.setState({state: state})
+            onPlayerStateChange(state)
+        })
 
-        this.player.on('stateChange', e => onPlayerStateChange(e.data))
+        this.player.on('error', event => {
+            console.error(event)
+        })
+    }
+
+    componentWillReceiveProps ({ currentTrack, tracks }) {
+        if (this.state.currentTrack !== currentTrack) {
+            this.player.playVideoAt(tracks.findIndex(track => track.id === currentTrack))
+            this.setState({currentTrack: currentTrack})
+        }
     }
 
     assignPlayerElement (playerElement) {
         this.playerElement = playerElement
-    }
-
-    componentWillReceiveProps ({ currentTrack, tracks, isPlaying }) {
-        const ids = tracks
-            .map(track => track.id)
-        if (currentTrack !== this.currentTrack) {
-            this.player.playVideoAt(ids.indexOf(currentTrack))
-            this.currentTrack = currentTrack
-        }
-        this.player.getPlayerState()
-            .then(state => {
-                const playerIsPlaying = (state === PlayerState.PLAYING)
-                if (isPlaying !== playerIsPlaying) {
-                    if (isPlaying) {
-                        this.player.playVideo()
-                    } else {
-                        this.player.pauseVideo()
-                    }
-                }
-            })
     }
 
     render () {
