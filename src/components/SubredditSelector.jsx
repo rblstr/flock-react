@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default ({ subreddits, updateSubreddits, fetchTracks }) => {
+const SubredditSelector = ({ subreddits, updateSubreddits, fetchTracks }) => {
     return (
         <form onSubmit={e => {
                 e.preventDefault()
@@ -17,3 +17,5 @@ export default ({ subreddits, updateSubreddits, fetchTracks }) => {
         </form>
     )
 }
+
+export default SubredditSelector
