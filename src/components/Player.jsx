@@ -10,12 +10,27 @@ class Player extends PureComponent {
         super(props)
 
         this.state = { currentTrack: null, state: PlayerState.UNSTARTED }
-        this._assignPlayerElement = ref => this.assignPlayerElement(ref)
+        this._assignPlayerElement = player => this.playerElement = player
+    }
+
+    playTrack (newTrack) {
+        const { tracks } = this.props
+        const index = tracks.findIndex(track => track.id === newTrack.id)
+        return this.player.playVideoAt(index)
+    }
+
+    play () {
+        return this.player.playVideo()
+    }
+
+    pause () {
+        return this.player.pauseVideo()
     }
 
     componentDidMount () {
         const {
             tracks,
+            onPlayerReady,
             onPlayerStateChange,
             onTrackChange
         } = this.props
@@ -48,20 +63,13 @@ class Player extends PureComponent {
             onPlayerStateChange(state)
         })
 
+        this.player.on('ready', event => {
+            onPlayerReady(this)
+        })
+
         this.player.on('error', event => {
             console.error(event)
         })
-    }
-
-    componentWillReceiveProps ({ currentTrack, tracks }) {
-        if (this.state.currentTrack !== currentTrack) {
-            this.player.playVideoAt(tracks.findIndex(track => track.id === currentTrack))
-            this.setState({currentTrack: currentTrack})
-        }
-    }
-
-    assignPlayerElement (playerElement) {
-        this.playerElement = playerElement
     }
 
     render () {

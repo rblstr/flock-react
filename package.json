@@ -6,7 +6,7 @@
   "scripts": {
     "prestart": "mkdir -p dist && browserify -d src/main.js -o dist/index.js -t [ babelify --presets [ es2015 react ] --plugins [ transform-object-rest-spread ] ]",
     "start": "static",
-    "watch": "watchify -d src/main.js -o dist/index.js -t [ babelify --presets [ es2015 react ] --plugins [ transform-object-rest-spread ] ]"
+    "watch": "mkdir -p dist && watchify -d src/main.js -o dist/index.js -t [ babelify --presets [ es2015 react ] --plugins [ transform-object-rest-spread ] ]"
   },
   "repository": {
     "type": "git",

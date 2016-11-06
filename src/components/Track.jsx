@@ -17,7 +17,7 @@ const subredditStyle = {
     fontStyle: 'italic'
 }
 
-export default ({ track, playing, onTrackClicked }) => {
+const Track = ({ track, playing, onTrackClicked }) => {
     return (
         <div>
             <span
@@ -32,3 +32,5 @@ export default ({ track, playing, onTrackClicked }) => {
         </div>
     )
 }
+
+export default Track
