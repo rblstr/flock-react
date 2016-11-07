@@ -15,6 +15,7 @@ export default (state=initialState, action) => {
         case LINKS_FETCHING:
             return {
                 ...state,
+                links: [],
                 isFetching: true,
                 error: null
             }
@@ -28,7 +29,8 @@ export default (state=initialState, action) => {
         case LINKS_ERROR:
             return {
                 ...state,
-                isFetching:false,
+                links: [],
+                isFetching: false,
                 error: 'Error fetching links'
             }
         default:
