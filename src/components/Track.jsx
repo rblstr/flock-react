@@ -1,7 +1,7 @@
 import React from 'react'
 
 const upvoteStyle = {
-    color: 'orangered'
+    color: 'darkgoldenrod'
 }
 
 const downvoteStyle = {
