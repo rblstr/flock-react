@@ -7,6 +7,12 @@ export const LINKS_ERROR = 'LINKS_ERROR'
 
 export const fetchLinks = (subreddits) => {
     return dispatch => {
+
+        if (!subreddits || !subreddits.length) {
+            dispatch(recieveLinks([]))
+            return
+        }
+
         dispatch(linksFetching())
 
         const subredditsUrl = subreddits.filter(s => s).join('+')
