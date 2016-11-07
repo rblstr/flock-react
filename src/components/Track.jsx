@@ -25,8 +25,8 @@ const Track = ({ track, playing, onTrackClicked }) => {
                 onClick={e => onTrackClicked(track)}
             >{track.title}</span>&nbsp;<span style={subredditStyle}>{track.subreddit}</span>
             <div>
-                <a href={track.permalink}>Permalink</a>&nbsp;
-                <a href={track.url}>YouTube</a>&nbsp;
+                <a href={track.permalink} target='_blank'>Permalink</a>&nbsp;
+                <a href={track.url} target='_blank'>YouTube</a>&nbsp;
                 <span style={upvoteStyle}>{track.ups}</span>:<span style={downvoteStyle}>{track.downs}</span>
             </div>
         </div>

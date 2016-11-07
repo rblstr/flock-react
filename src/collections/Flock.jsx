@@ -10,48 +10,59 @@ import SubredditSelector from '../components/SubredditSelector.jsx'
 import Player from '../components/Player.jsx'
 import TrackList from '../components/TrackList.jsx'
 
-const arrayEquals = (lhs, rhs) => {
-    if (!lhs || !rhs) {
-        return false
-    }
-
-    if (lhs.length !== rhs.length) {
-        return false
-    }
-
-    let equals = true
-    for (var i = lhs.length - 1; i >= 0; i--) {
-        equals = (lhs[i] === rhs[i])
-        if (!equals) {
-            break
-        }
-    }
-    return equals
-}
+import { arrayEquals } from '../utils'
 
 class Flock extends Component {
 
     constructor (props) {
         super(props)
 
+        const { dispatch } = this.props
+
         this._assignPlayer = player => this.player = player
+        this._onFetchTracks = subreddits => this.onFetchTracks(subreddits)
+        this._onPlayerStateChange = state => dispatch(setPlayerState(state))
+        this._onTrackChange = track => dispatch(setPlayerCurrentTrack(track))
+        this._onTrackClicked = track => this.onTrackClicked(track)
     }
 
     componentWillMount () {
         const {
             dispatch,
-            params
+            params: {
+                subreddits = ''
+            }
         } = this.props
 
-        let {
-            subreddits = ''
-        } = this.props.params
+        const splitSubreddits = subreddits.split('+').filter(subreddit => subreddit)
 
-        subreddits = subreddits.split('+').filter(subreddit => subreddit)
+        if (splitSubreddits && splitSubreddits.length > 0) {
+            dispatch(updateSubreddits(splitSubreddits))
+            dispatch(fetchLinks(splitSubreddits))
+        }
+    }
 
-        if (subreddits && subreddits.length > 0) {
-            dispatch(updateSubreddits(subreddits.join(' ')))
+    onFetchTracks (subreddits) {
+        const { dispatch, subreddits: stateSubreddits } = this.props
+        const sortedSubreddits = subreddits.concat().sort()
+        const sortedStateSubreddits = stateSubreddits.concat().sort()
+        if (!arrayEquals(sortedSubreddits, sortedStateSubreddits)) {
+            hashHistory.push(`${subreddits.join('+')}`)
+            dispatch(updateSubreddits(subreddits))
             dispatch(fetchLinks(subreddits))
+        }
+    }
+
+    onTrackClicked (track) {
+        const { dispatch, playerState: { currentTrack, state } } = this.props
+        if (track.id != currentTrack) {
+            this.player.playTrack(track)
+        } else {
+            if (state == PlayerState.PLAYING) {
+                this.player.pause()
+            } else if (state === PlayerState.PAUSED) {
+                this.player.play()
+            }
         }
     }
 
@@ -62,30 +73,19 @@ class Flock extends Component {
             links,
             error,
             playerState,
-            history
+            params: {
+                subreddits: paramSubreddits = ''
+            }
         } = this.props
 
-        let {
-            subreddits = ''
-        } = this.props.params
-
-        subreddits = subreddits.split('+')
+        const subreddits = paramSubreddits.split('+').filter(subreddit => subreddit)
 
         return (
             <div>
                 <h1 style={{color: 'darkgoldenrod'}}>Flock</h1>
                 <SubredditSelector
                     subreddits={subreddits}
-                    updateSubreddits={subreddits => dispatch(updateSubreddits(subreddits))}
-                    fetchTracks={subs => {
-                        const subredditList = subs.split(' ').sort()
-                        const subredditsCopy = subreddits.concat().sort()
-                        if (!arrayEquals(subredditList, subredditsCopy)) {
-                            hashHistory.push(`${subredditList.join('+')}`)
-                            dispatch(updateSubreddits(subs))
-                            dispatch(fetchLinks(subredditList))
-                        }
-                    }}
+                    fetchTracks={this._onFetchTracks}
                 />
                 { isFetching ? (
                     <div>
@@ -98,22 +98,12 @@ class Flock extends Component {
                             tracks={links}
                             currentTrack={playerState.currentTrack}
                             onPlayerReady={this._assignPlayer}
-                            onPlayerStateChange={state => dispatch(setPlayerState(state))}
-                            onTrackChange={track => dispatch(setPlayerCurrentTrack(track))}
+                            onPlayerStateChange={this._onPlayerStateChange}
+                            onTrackChange={this._onTrackChange}
                         />
                         <TrackList
                             tracks={links}
-                            onTrackClicked={track => {
-                                if (track.id != playerState.currentTrack) {
-                                    this.player.playTrack(track)
-                                } else {
-                                    if (playerState.state == PlayerState.PLAYING) {
-                                        this.player.pause()
-                                    } else if (playerState.state === PlayerState.PAUSED) {
-                                        this.player.play()
-                                    }
-                                }
-                            }}
+                            onTrackClicked={this._onTrackClicked}
                             currentTrack={playerState.currentTrack}
                         />
                     </div>
