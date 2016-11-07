@@ -4,6 +4,7 @@ import { Provider } from 'react-redux'
 import { createStore, applyMiddleware } from 'redux'
 import Thunk from 'redux-thunk'
 import createLogger from 'redux-logger'
+import { Router, Route, hashHistory } from 'react-router'
 
 import reducer from './reducers'
 
@@ -21,7 +22,10 @@ const store = createStore(
 
 ReactDOM.render(
     <Provider store={store}>
-        <Flock />
+        <Router history={hashHistory}>
+            <Route path="/" component={Flock} />
+            <Route path="/:subreddits" component={Flock} />
+        </Router>
     </Provider>,
     document.getElementById('flock')
 )
