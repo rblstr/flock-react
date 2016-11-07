@@ -47,7 +47,7 @@ class Flock extends Component {
             subreddits = ''
         } = this.props.params
 
-        subreddits = subreddits.split('+')
+        subreddits = subreddits.split('+').filter(subreddit => subreddit)
 
         if (subreddits && subreddits.length > 0) {
             dispatch(updateSubreddits(subreddits.join(' ')))
