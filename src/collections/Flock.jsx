@@ -81,11 +81,12 @@ class Flock extends Component {
         const subreddits = paramSubreddits.split('+').filter(subreddit => subreddit)
 
         return (
-            <div>
-                <h1 style={{color: 'darkgoldenrod'}}>Flock</h1>
+            <div className="ui text container">
+                <h1 className="ui yellow header">Flock</h1>
                 <SubredditSelector
                     subreddits={subreddits}
                     fetchTracks={this._onFetchTracks}
+                    isFetching={isFetching}
                 />
                 { isFetching ? (
                     <div>
@@ -93,19 +94,28 @@ class Flock extends Component {
                     </div>
                 ) : (
                     (links && links.length > 0) &&
-                    <div>
-                        <Player
-                            tracks={links}
-                            currentTrack={playerState.currentTrack}
-                            onPlayerReady={this._assignPlayer}
-                            onPlayerStateChange={this._onPlayerStateChange}
-                            onTrackChange={this._onTrackChange}
-                        />
-                        <TrackList
-                            tracks={links}
-                            onTrackClicked={this._onTrackClicked}
-                            currentTrack={playerState.currentTrack}
-                        />
+                    <div className="ui one column grid">
+                        <div className="center aligned row">
+                            <div className="column">
+                                <Player
+                                    tracks={links}
+                                    currentTrack={playerState.currentTrack}
+                                    onPlayerReady={this._assignPlayer}
+                                    onPlayerStateChange={this._onPlayerStateChange}
+                                    onTrackChange={this._onTrackChange}
+                                />
+                            </div>
+                        </div>
+                        <div className="row">
+                            <div className="column">
+                                <TrackList
+                                    tracks={links}
+                                    currentTrack={playerState.currentTrack}
+                                    playerState={playerState.state}
+                                    onTrackClicked={this._onTrackClicked}
+                                />
+                            </div>
+                        </div>
                     </div>
                 )}
                 { error &&
