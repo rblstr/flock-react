@@ -82,42 +82,43 @@ class Flock extends Component {
 
         return (
             <div className="ui text container">
-                <h1 className="ui yellow header">Flock</h1>
-                <SubredditSelector
-                    subreddits={subreddits}
-                    fetchTracks={this._onFetchTracks}
-                    isFetching={isFetching}
-                />
-                { isFetching ? (
-                    <div>
-                        <h2>Fetching tracks...</h2>
-                    </div>
-                ) : (
-                    (links && links.length > 0) &&
+                <div className="ui masthead basic segment">
+                    <h1 className="ui yellow header">Flock</h1>
+                    <SubredditSelector
+                        subreddits={subreddits}
+                        fetchTracks={this._onFetchTracks}
+                        isFetching={isFetching}
+                    />
+                </div>
+                { (links && links.length > 0) &&
                     <div className="ui one column grid">
                         <div className="center aligned row">
                             <div className="column">
-                                <Player
-                                    tracks={links}
-                                    currentTrack={playerState.currentTrack}
-                                    onPlayerReady={this._assignPlayer}
-                                    onPlayerStateChange={this._onPlayerStateChange}
-                                    onTrackChange={this._onTrackChange}
-                                />
+                                <div className="ui inverted segment">
+                                    <Player
+                                        tracks={links}
+                                        currentTrack={playerState.currentTrack}
+                                        onPlayerReady={this._assignPlayer}
+                                        onPlayerStateChange={this._onPlayerStateChange}
+                                        onTrackChange={this._onTrackChange}
+                                    />
+                                </div>
                             </div>
                         </div>
                         <div className="row">
                             <div className="column">
-                                <TrackList
-                                    tracks={links}
-                                    currentTrack={playerState.currentTrack}
-                                    playerState={playerState.state}
-                                    onTrackClicked={this._onTrackClicked}
-                                />
+                                <div className="ui basic segment">
+                                    <TrackList
+                                        tracks={links}
+                                        currentTrack={playerState.currentTrack}
+                                        playerState={playerState.state}
+                                        onTrackClicked={this._onTrackClicked}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
-                )}
+                }
                 { error &&
                     <div style={{color: 'red'}}>
                         {error}

@@ -55,9 +55,9 @@ class Track extends Component {
                 onMouseEnter={e => this.setState({isHovering: true})}
                 onMouseLeave={e => this.setState({isHovering: false})}
             >
-                <i className={iconClassName} onClick={e => onTrackClicked(track)}></i>
+                <i className={iconClassName} style={{cursor: 'pointer'}} onClick={e => onTrackClicked(track)}></i>
                 <div className="content">
-                    <h3 className={`ui ${playing ? 'yellow ' : ''}header`} onClick={e => onTrackClicked(track)}>{track.title}</h3>
+                    <h3 className={`ui ${playing ? 'yellow ' : ''}header`} style={{cursor: 'pointer'}} onClick={e => onTrackClicked(track)}>{track.title}</h3>
                     <div className="description">
                         <a href={track.permalink} target="_blank">Permalink</a>&nbsp;
                         <a href={track.url} target="_blank">YouTube</a>&nbsp;
