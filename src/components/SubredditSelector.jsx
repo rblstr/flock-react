@@ -16,20 +16,25 @@ class SubredditSelector extends Component {
         }
     }
 
+    componentDidUpdate() {
+        this.subredditField.value = this.props.subreddits.join(' ')
+    }
+
     render () {
-        const { subreddits, isFetching } = this.props
-        const iconClassName = isFetching ? 'notched circle loading' : 'play'
+        const { subreddits } = this.props
         return (
-            <form onSubmit={this._onSubmit}
-            >
-                <div className="ui fluid icon input">
+            <form onSubmit={this._onSubmit}>
+                <div className="ui fluid action input">
                     <input
                         type="text"
                         placeholder="subreddit subreddit subreddit ..."
                         defaultValue={subreddits.join(' ')}
                         ref={this._assignSubredditField}
                     />
-                    <i className={`${iconClassName} icon`}></i>
+                    <button className="ui yellow right labeled icon button">
+                        <i className="play icon"></i>
+                        Play
+                    </button>
                 </div>
             </form>
         )

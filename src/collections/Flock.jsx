@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { hashHistory } from 'react-router'
+import { hashHistory, Link } from 'react-router'
 
 import { updateSubreddits } from '../actions/subreddits'
 import { fetchLinks } from '../actions/links'
@@ -27,18 +27,24 @@ class Flock extends Component {
     }
 
     componentWillMount () {
-        const {
-            dispatch,
-            params: {
-                subreddits = ''
-            }
-        } = this.props
+        const { dispatch, params: { subreddits = '' } } = this.props
 
         const splitSubreddits = subreddits.split('+').filter(subreddit => subreddit)
 
         if (splitSubreddits && splitSubreddits.length > 0) {
             dispatch(updateSubreddits(splitSubreddits))
             dispatch(fetchLinks(splitSubreddits))
+        }
+    }
+
+    componentDidUpdate (prevProps) {
+        let { dispatch, params: { subreddits = '' } } = this.props
+        let { params: { subreddits: prevSubreddits = '' } } = prevProps
+        subreddits = subreddits.split('+').filter(subreddit => subreddit).sort()
+        prevSubreddits = prevSubreddits.split('+').filter(subreddit => subreddit).sort()
+        if (!arrayEquals(subreddits, prevSubreddits)) {
+            dispatch(updateSubreddits(subreddits))
+            dispatch(fetchLinks(subreddits))
         }
     }
 
@@ -55,10 +61,10 @@ class Flock extends Component {
 
     onTrackClicked (track) {
         const { dispatch, playerState: { currentTrack, state } } = this.props
-        if (track.id != currentTrack) {
+        if (track.id !== currentTrack) {
             this.player.playTrack(track)
         } else {
-            if (state == PlayerState.PLAYING) {
+            if (state === PlayerState.PLAYING) {
                 this.player.pause()
             } else if (state === PlayerState.PAUSED) {
                 this.player.play()
@@ -83,14 +89,20 @@ class Flock extends Component {
         return (
             <div className="ui text container">
                 <div className="ui masthead basic segment">
-                    <h1 className="ui yellow header">Flock</h1>
+                    <Link to="/">
+                        <h1 className="ui yellow header">Flock</h1>
+                    </Link>
                     <SubredditSelector
                         subreddits={subreddits}
                         fetchTracks={this._onFetchTracks}
-                        isFetching={isFetching}
                     />
+                    { error &&
+                        <div className="ui error message">
+                            <p>{error}</p>
+                        </div>
+                    }
                 </div>
-                { (links && links.length > 0) &&
+                { (links && links.length > 0) ? (
                     <div className="ui one column grid">
                         <div className="center aligned row">
                             <div className="column">
@@ -118,12 +130,30 @@ class Flock extends Component {
                             </div>
                         </div>
                     </div>
-                }
-                { error &&
-                    <div style={{color: 'red'}}>
-                        {error}
+                ) : (
+                    <div className="ui basic segment">
+                        <div className={`ui message${isFetching ? ' loading' : ''}`}>
+                            <h1 className="ui header">Music discovery, powered by Reddit</h1>
+                            <p>Simply enter one or more musical subreddit names and Flock will return a playlist of what's hot for your listening pleasure</p>
+                            <p>Here's a few suggestions to get you going:</p>
+                            <Link to="/chillmusic">ChillMusic</Link> • <Link to="/blues+rock">Blues & Rock</Link> • <Link to="90shiphop">90s HipHop</Link> • <Link to="/futuregarage+futurebeats">FutureGarage & FutureBeats</Link>
+                        </div>
                     </div>
-                }
+                )}
+                <div className="ui basic segment">
+                    <h2
+                        className="ui right floated header"
+                        style={{marginRight: 0}}
+                    >
+                        <a href="https://twitter.com/rblstr">@rblstr</a> | <a href="https://github.com/rblstr/flock-react" target="_blank">github.com/rblstr/flock-react</a>
+                        <div
+                            className="sub header"
+                            style={{textAlign: 'right'}}
+                        >
+                            <a href="http://flock.rblstr.com">original version</a> by <a href="https://twitter.com/rblstr" target="_blank">@rblstr</a> & <a href="https://twitter.com/rokeeffe" target="_blank">@rokeeffe</a>
+                        </div>
+                    </h2>
+                </div>
             </div>
         )
     }
