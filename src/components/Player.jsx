@@ -9,7 +9,11 @@ class Player extends PureComponent {
     constructor (props) {
         super(props)
 
-        this.state = { currentTrack: null, state: PlayerState.UNSTARTED }
+        this.state = {
+            currentTrack: null,
+            state: PlayerState.UNSTARTED
+        }
+        
         this._assignPlayerElement = player => this.playerElement = player
     }
 
@@ -54,7 +58,7 @@ class Player extends PureComponent {
             this.player.getVideoUrl().then(url => {
                 const videoId = new URI(url).query(true).v
                 const track = tracks.find(videoIdToTrack(videoId))
-                if (track.id != this.state.currentTrack) {
+                if (track.id !== this.state.currentTrack) {
                     onTrackChange(track)
                     this.setState({currentTrack: track.id})
                 }
@@ -73,12 +77,7 @@ class Player extends PureComponent {
     }
 
     render () {
-        const { tracks } = this.props
-        return (
-            <div>
-                <div ref={this._assignPlayerElement} />
-            </div>
-        )
+        return <div ref={this._assignPlayerElement} />
     }
 }
 

@@ -47,7 +47,7 @@ class Track extends Component {
                 iconClassName = 'volume up'
             }
         }
-        iconClassName = `large ${iconClassName} middle aligned icon`
+        iconClassName = `${iconClassName} middle aligned link icon`
 
         return (
             <div
@@ -55,14 +55,20 @@ class Track extends Component {
                 onMouseEnter={e => this.setState({isHovering: true})}
                 onMouseLeave={e => this.setState({isHovering: false})}
             >
-                <i className={iconClassName} style={{cursor: 'pointer'}} onClick={e => onTrackClicked(track)}></i>
+                <div className="right floated content">
+                    <a href={track.url} target="_black"><i className="film icon"></i>YouTube</a>
+                </div>
+                <i
+                    className={iconClassName}
+                    style={{paddingLeft: 0, paddingRight: 0}}
+                    onClick={e => onTrackClicked(track)}>
+                </i>
                 <div className="content">
-                    <h3 className={`ui ${playing ? 'yellow ' : ''}header`} style={{cursor: 'pointer'}} onClick={e => onTrackClicked(track)}>{track.title}</h3>
-                    <div className="description">
-                        <a href={track.permalink} target="_blank">Permalink</a>&nbsp;
-                        <a href={track.url} target="_blank">YouTube</a>&nbsp;
-                        <span style={upvoteStyle}>{track.ups}</span>:<span style={downvoteStyle}>{track.downs}</span>
-                    </div>
+                    <span
+                        style={{cursor: 'pointer', color: playing ? '#FBBD08' : 'black'}}
+                        onClick={e => onTrackClicked(track)}
+                    >{track.title}</span>
+                    <a href={track.permalink} target="_black">&nbsp;<i className="comment icon"></i>{track.num_comments}</a>
                 </div>
             </div>
         )
