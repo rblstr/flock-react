@@ -132,7 +132,12 @@ class Flock extends Component {
                     </div>
                 ) : (
                     <div className="ui basic segment">
-                        <div className={`ui message${isFetching ? ' loading' : ''}`}>
+                        { isFetching &&
+                            <div className="ui active dimmer">
+                                <div className="ui text loader">Fetching Tracks</div>
+                            </div>
+                        }
+                        <div className="ui message">
                             <h1 className="ui header">Music discovery, powered by Reddit</h1>
                             <p>Simply enter one or more musical subreddit names and Flock will return a playlist of what's hot for your listening pleasure</p>
                             <p>Here's a few suggestions to get you going:</p>
@@ -140,19 +145,15 @@ class Flock extends Component {
                         </div>
                     </div>
                 )}
-                <div className="ui basic segment">
-                    <h2
-                        className="ui right floated header"
-                        style={{marginRight: 0}}
-                    >
-                        <a href="https://twitter.com/rblstr">@rblstr</a> | <a href="https://github.com/rblstr/flock-react" target="_blank">github.com/rblstr/flock-react</a>
-                        <div
-                            className="sub header"
-                            style={{textAlign: 'right'}}
-                        >
-                            <a href="http://flock.rblstr.com">original version</a> by <a href="https://twitter.com/rblstr" target="_blank">@rblstr</a> & <a href="https://twitter.com/rokeeffe" target="_blank">@rokeeffe</a>
-                        </div>
-                    </h2>
+                <div className="ui basic footer segment">
+                    <div className="ui right aligned container">
+                        <h2 className="ui header">
+                            <a href="https://twitter.com/rblstr">@rblstr</a> | <a href="https://github.com/rblstr/flock-react" target="_blank">github.com/rblstr/flock-react</a>
+                            <div className="sub header">
+                                <a href="http://flock.rblstr.com">original version</a> by <a href="https://twitter.com/rblstr" target="_blank">@rblstr</a> & <a href="https://twitter.com/rokeeffe" target="_blank">@rokeeffe</a>
+                            </div>
+                        </h2>
+                    </div>
                 </div>
             </div>
         )
