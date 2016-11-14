@@ -132,7 +132,12 @@ class Flock extends Component {
                     </div>
                 ) : (
                     <div className="ui basic segment">
-                        <div className={`ui message${isFetching ? ' loading' : ''}`}>
+                        { isFetching &&
+                            <div className="ui active dimmer">
+                                <div className="ui text loader">Fetching Tracks</div>
+                            </div>
+                        }
+                        <div className="ui message">
                             <h1 className="ui header">Music discovery, powered by Reddit</h1>
                             <p>Simply enter one or more musical subreddit names and Flock will return a playlist of what's hot for your listening pleasure</p>
                             <p>Here's a few suggestions to get you going:</p>
