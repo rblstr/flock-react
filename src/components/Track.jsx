@@ -28,14 +28,9 @@ class Track extends Component {
         const { isHovering } = this.state
 
         let iconClassName
-        if (!playing) {
-            if (isHovering) {
-                iconClassName = 'play'
-            } else {
-                iconClassName = 'disabled play'
-            }
-        } else {
-            if (isHovering) {
+
+        if (isHovering) {
+            if (playing) {
                 if (playerState === PlayerState.PLAYING) {
                     iconClassName = 'pause'
                 } else if (playerState === PlayerState.PAUSED) {
@@ -44,9 +39,22 @@ class Track extends Component {
                     iconClassName = 'notched circle loading'
                 }
             } else {
-                iconClassName = 'volume up'
+                iconClassName = 'play'
+            }
+        } else {
+            if (playing) {
+                if (playerState === PlayerState.PLAYING) {
+                    iconClassName = 'volume up'
+                } else if (playerState === PlayerState.PAUSED) {
+                    iconClassName = 'diabled play'
+                } else {
+                    iconClassName = 'notched circle loading'
+                }
+            } else {
+                iconClassName = 'disabled play'
             }
         }
+
         iconClassName = `${iconClassName} middle aligned link icon`
 
         return (
