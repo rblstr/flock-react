@@ -52,7 +52,7 @@ class Flock extends Component {
         }
     }
 
-    componentDidUpdate (prevProps, prevState) {
+    componentWillReceiveProps (nextProps) {
         const {
             dispatch,
             subreddits,
@@ -61,7 +61,7 @@ class Flock extends Component {
                 sort = 'hot',
                 t = 'all'
             }
-        } = this.props
+        } = nextProps
 
         const {
             sort: stateSort,
