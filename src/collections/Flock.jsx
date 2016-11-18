@@ -20,7 +20,7 @@ class Flock extends Component {
         const { dispatch } = this.props
 
         this.state = {
-            sortType: 'hot',
+            sort: 'hot',
             t: 'all'
         }
 
@@ -29,54 +29,80 @@ class Flock extends Component {
         this._onPlayerStateChange = state => dispatch(setPlayerState(state))
         this._onTrackChange = track => dispatch(setPlayerCurrentTrack(track))
         this._onTrackClicked = track => this.onTrackClicked(track)
+        this._onSortChanged = (sort, t='all') => this.onSortChanged(sort, t)
     }
 
     componentWillMount () {
-        const { dispatch, params: { subreddits = '' } } = this.props
-        const { sortType, t } = this.state
+        let {
+            dispatch,
+            params: {
+                subreddits = '',
+                sort = 'hot',
+                t = 'all'
+            }
+        } = this.props
+
+        this.setState({sort, t})
 
         const splitSubreddits = subreddits.split('+').filter(subreddit => subreddit)
 
-        if (splitSubreddits && splitSubreddits.length > 0) {
+        if (splitSubreddits && splitSubreddits.length) {
             dispatch(updateSubreddits(splitSubreddits))
-            dispatch(fetchLinks(splitSubreddits, sortType, t))
+            dispatch(fetchLinks(splitSubreddits, sort, t))
         }
     }
 
     componentDidUpdate (prevProps, prevState) {
-        const { sortType, t } = this.state
-        const { sortType: prevSortType, t: prevT } = prevState
+        const {
+            dispatch,
+            subreddits,
+            params: {
+                subreddits: paramsSubreddits = '',
+                sort = 'hot',
+                t = 'all'
+            }
+        } = this.props
 
-        const sortChanged = (sortType !== prevSortType) || (t !== prevT)
+        const {
+            sort: stateSort,
+            t: stateT
+        } = this.state
 
-        let { dispatch, params: { subreddits = '' } } = this.props
-        let { params: { subreddits: prevSubreddits = '' } } = prevProps
-        subreddits = subreddits.split('+').filter(subreddit => subreddit).sort()
-        prevSubreddits = prevSubreddits.split('+').filter(subreddit => subreddit).sort()
+        const splitParamsSubreddits = paramsSubreddits.split('+').filter(subreddit => subreddit)
+        const sortedParamsSubreddits = splitParamsSubreddits.concat().sort()
+        const sortedSubreddits = subreddits.concat().sort()
 
-        const subredditsChanged = !arrayEquals(subreddits, prevSubreddits)
+        const sortChanged = ((stateSort !== sort) || (stateT !== t))
+        const subredditsChanged = !arrayEquals(sortedParamsSubreddits, sortedSubreddits)
 
-        if (subredditsChanged || sortChanged) {
-            dispatch(updateSubreddits(subreddits))
-            dispatch(fetchLinks(subreddits, sortType, t))
+        if (sortChanged || subredditsChanged) {
+            this.setState({sort, t})
+            dispatch(updateSubreddits(splitParamsSubreddits))
+            dispatch(fetchLinks(splitParamsSubreddits, sort, t))
         }
     }
 
     onFetchTracks (subreddits) {
-        const { sortType, t } = this.state
+        const { sort, t } = this.state
         const { dispatch, subreddits: stateSubreddits } = this.props
+
         const sortedSubreddits = subreddits.concat().sort()
         const sortedStateSubreddits = stateSubreddits.concat().sort()
         if (!arrayEquals(sortedSubreddits, sortedStateSubreddits)) {
             hashHistory.push(`${subreddits.join('+')}`)
-            dispatch(updateSubreddits(subreddits))
-            dispatch(fetchLinks(subreddits, sortType, t))
         }
     }
 
     onTrackClicked (track) {
-        const { dispatch, playerState: { currentTrack, state } } = this.props
-        if (track.id !== currentTrack) {
+        const {
+            dispatch,
+            playerState: {
+                currentTrack,
+                state
+            }
+        } = this.props
+
+        if (track !== currentTrack) {
             this.player.playTrack(track)
         } else {
             if (state === PlayerState.PLAYING) {
@@ -87,20 +113,25 @@ class Flock extends Component {
         }
     }
 
+    onSortChanged (sort, t) {
+        const { subreddits } = this.props
+        const { sort: stateSort, t: stateT } = this.state
+
+        if (stateSort !== sort || stateT !== t) {
+            hashHistory.push(`${subreddits.join('+')}/${sort}/${t}`)
+        }
+    }
+
     render () {
         const {
-            dispatch,
             isFetching,
             links,
             error,
             playerState,
-            params: {
-                subreddits: paramSubreddits = ''
-            }
+            subreddits
         } = this.props
-        const { sortType, t } = this.state
 
-        const subreddits = paramSubreddits.split('+').filter(subreddit => subreddit)
+        const { sort, t } = this.state
 
         return (
             <div className="ui text container">
@@ -124,14 +155,14 @@ class Flock extends Component {
                         <div className="row">
                             <div className="column">
                                 <button
-                                    className={`ui ${sortType === 'hot' ? 'primary ' : ''}button`}
-                                    onClick={event => this.setState({sortType: 'hot', t: 'all'})}
+                                    className={`ui ${sort === 'hot' ? 'primary ' : ''}button`}
+                                    onClick={event => this._onSortChanged('hot')}
                                 >
                                     Hot
                                 </button>
                                 <select
-                                    value={sortType === 'top' ? t : ''}
-                                    onChange={event => this.setState({sortType: 'top', t: event.target.value})}
+                                    value={sort === 'top' ? t : ''}
+                                    onChange={event => this._onSortChanged('top', event.target.value)}
                                 >
                                     <option value="">Top</option>
                                     <option value="all">All</option>
@@ -194,12 +225,15 @@ class Flock extends Component {
 }
 
 const mapStateToProps = ({ subreddits, links, player }) => {
+    const playerState = {...player}
+    playerState.currentTrack = links.links.find(track => track.id === playerState.currentTrack)
+
     return {
         subreddits,
         isFetching: links.isFetching,
         links: links.links,
         error: links.error,
-        playerState: player
+        playerState
     }
 }
 

@@ -25,6 +25,8 @@ ReactDOM.render(
         <Router history={hashHistory}>
             <Route path="/" component={Flock} />
             <Route path="/:subreddits" component={Flock} />
+            <Route path="/:subreddits/:sort" component={Flock} />
+            <Route path="/:subreddits/:sort/:t" component={Flock} />
         </Router>
     </Provider>,
     document.getElementById('flock')

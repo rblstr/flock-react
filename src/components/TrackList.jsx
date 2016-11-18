@@ -10,7 +10,7 @@ const TrackList = ({ tracks, currentTrack, playerState, onTrackClicked }) => {
                         <Track
                             key={track.id}
                             track={track}
-                            playing={track.id === currentTrack}
+                            playing={track === currentTrack}
                             playerState={playerState}
                             onTrackClicked={onTrackClicked}
                         />
