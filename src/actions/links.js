@@ -5,7 +5,7 @@ export const LINKS_FETCHING = 'LINKS_FETCHING'
 export const LINKS_RECIEVED = 'LINKS_RECIEVED'
 export const LINKS_ERROR = 'LINKS_ERROR'
 
-export const fetchLinks = (subreddits) => {
+export const fetchLinks = (subreddits, sortType='hot', t='all') => {
     return dispatch => {
 
         if (!subreddits || !subreddits.length) {
@@ -16,7 +16,7 @@ export const fetchLinks = (subreddits) => {
         dispatch(linksFetching())
 
         const subredditsUrl = subreddits.filter(s => s).join('+')
-        fetch(`https://www.reddit.com/r/${subredditsUrl}/top.json?limit=100`)
+        fetch(`https://www.reddit.com/r/${subredditsUrl}/${sortType}.json?limit=100&t=${t}`)
             .then(response => {
                 if (response.ok) {
                     response.json().then(json => {

@@ -19,6 +19,11 @@ class Flock extends Component {
 
         const { dispatch } = this.props
 
+        this.state = {
+            sortType: 'hot',
+            t: 'all'
+        }
+
         this._assignPlayer = player => this.player = player
         this._onFetchTracks = subreddits => this.onFetchTracks(subreddits)
         this._onPlayerStateChange = state => dispatch(setPlayerState(state))
@@ -28,34 +33,44 @@ class Flock extends Component {
 
     componentWillMount () {
         const { dispatch, params: { subreddits = '' } } = this.props
+        const { sortType, t } = this.state
 
         const splitSubreddits = subreddits.split('+').filter(subreddit => subreddit)
 
         if (splitSubreddits && splitSubreddits.length > 0) {
             dispatch(updateSubreddits(splitSubreddits))
-            dispatch(fetchLinks(splitSubreddits))
+            dispatch(fetchLinks(splitSubreddits, sortType, t))
         }
     }
 
-    componentDidUpdate (prevProps) {
+    componentDidUpdate (prevProps, prevState) {
+        const { sortType, t } = this.state
+        const { sortType: prevSortType, t: prevT } = prevState
+
+        const sortChanged = (sortType !== prevSortType) || (t !== prevT)
+
         let { dispatch, params: { subreddits = '' } } = this.props
         let { params: { subreddits: prevSubreddits = '' } } = prevProps
         subreddits = subreddits.split('+').filter(subreddit => subreddit).sort()
         prevSubreddits = prevSubreddits.split('+').filter(subreddit => subreddit).sort()
-        if (!arrayEquals(subreddits, prevSubreddits)) {
+
+        const subredditsChanged = !arrayEquals(subreddits, prevSubreddits)
+
+        if (subredditsChanged || sortChanged) {
             dispatch(updateSubreddits(subreddits))
-            dispatch(fetchLinks(subreddits))
+            dispatch(fetchLinks(subreddits, sortType, t))
         }
     }
 
     onFetchTracks (subreddits) {
+        const { sortType, t } = this.state
         const { dispatch, subreddits: stateSubreddits } = this.props
         const sortedSubreddits = subreddits.concat().sort()
         const sortedStateSubreddits = stateSubreddits.concat().sort()
         if (!arrayEquals(sortedSubreddits, sortedStateSubreddits)) {
             hashHistory.push(`${subreddits.join('+')}`)
             dispatch(updateSubreddits(subreddits))
-            dispatch(fetchLinks(subreddits))
+            dispatch(fetchLinks(subreddits, sortType, t))
         }
     }
 
@@ -83,6 +98,7 @@ class Flock extends Component {
                 subreddits: paramSubreddits = ''
             }
         } = this.props
+        const { sortType, t } = this.state
 
         const subreddits = paramSubreddits.split('+').filter(subreddit => subreddit)
 
@@ -94,6 +110,7 @@ class Flock extends Component {
                     </Link>
                     <SubredditSelector
                         subreddits={subreddits}
+                        isFetching={isFetching}
                         fetchTracks={this._onFetchTracks}
                     />
                     { error &&
@@ -104,6 +121,27 @@ class Flock extends Component {
                 </div>
                 { (links && links.length > 0) ? (
                     <div className="ui one column grid">
+                        <div className="row">
+                            <div className="column">
+                                <button
+                                    className={`ui ${sortType === 'hot' ? 'primary ' : ''}button`}
+                                    onClick={event => this.setState({sortType: 'hot', t: 'all'})}
+                                >
+                                    Hot
+                                </button>
+                                <select
+                                    value={sortType === 'top' ? t : ''}
+                                    onChange={event => this.setState({sortType: 'top', t: event.target.value})}
+                                >
+                                    <option value="">Top</option>
+                                    <option value="all">All</option>
+                                    <option value="year">Year</option>
+                                    <option value="month">Month</option>
+                                    <option value="week">Week</option>
+                                    <option value="day">Day</option>
+                                </select>
+                            </div>
+                        </div>
                         <div className="center aligned row">
                             <div className="column">
                                 <div className="ui inverted segment">
@@ -130,13 +168,8 @@ class Flock extends Component {
                             </div>
                         </div>
                     </div>
-                ) : (
+                ) : ( !isFetching &&
                     <div className="ui basic segment">
-                        { isFetching &&
-                            <div className="ui active dimmer">
-                                <div className="ui text loader">Fetching Tracks</div>
-                            </div>
-                        }
                         <div className="ui message">
                             <h1 className="ui header">Music discovery, powered by Reddit</h1>
                             <p>Simply enter one or more musical subreddit names and Flock will return a playlist of what's hot for your listening pleasure</p>
