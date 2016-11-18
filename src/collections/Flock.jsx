@@ -60,8 +60,17 @@ class Flock extends Component {
                 subreddits: paramsSubreddits = '',
                 sort = 'hot',
                 t = 'all'
+            },
+            playerState: {
+                currentTrack
             }
         } = nextProps
+
+        if (currentTrack) {
+            document.title = `Flock | ${currentTrack.title}`
+        } else {
+            document.title = 'Flock | subreddit playlister'
+        }
 
         const {
             sort: stateSort,
