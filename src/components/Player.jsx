@@ -1,10 +1,12 @@
-import React, { PureComponent } from 'react'
+import React, { Component } from 'react'
 import YouTubePlayer from 'youtube-player'
 import URI from 'urijs'
 
 import { PlayerState } from '../actions/player'
 
-class Player extends PureComponent {
+import { arrayEquals } from '../utils'
+
+class Player extends Component {
 
     constructor (props) {
         super(props)
@@ -55,14 +57,18 @@ class Player extends PureComponent {
 
         this.player.on('stateChange', event => {
             const { data: state } = event
-            this.player.getVideoUrl().then(url => {
-                const videoId = new URI(url).query(true).v
-                const track = tracks.find(videoIdToTrack(videoId))
-                if (track.id !== this.state.currentTrack) {
-                    onTrackChange(track)
-                    this.setState({currentTrack: track.id})
-                }
-            })
+            if (state === PlayerState.PLAYING || state === PlayerState.PAUSED || state === PlayerState.BUFFERING) {
+                this.player.getVideoUrl().then(url => {
+                    const { tracks } = this.props
+                    const { currentTrack } = this.state
+                    const videoId = new URI(url).query(true).v
+                    const track = tracks.find(videoIdToTrack(videoId))
+                    if (track.id !== currentTrack) {
+                        onTrackChange(track)
+                        this.setState({currentTrack: track.id})
+                    }
+                })
+            }
             this.setState({state: state})
             onPlayerStateChange(state)
         })
@@ -75,6 +81,34 @@ class Player extends PureComponent {
             console.error(event)
         })
     }
+
+    shouldComponentUpdate (nextProps, nextState) {
+        const { tracks } = this.props
+        const { tracks: nextTracks } = nextProps
+
+        return !arrayEquals(tracks, nextTracks, (lhs, rhs) => (lhs.id === rhs.id))
+    }
+
+    componentWillUpdate (nextProps, nextState) {
+        const { state } = this.state
+        if (state === PlayerState.PLAYING) {
+            this.player.stopVideo()
+        }
+    }
+
+    componentDidUpdate (prevProps, nextProps) {
+        const { tracks } = this.props
+
+        const trackToVideoId = track => new URI(track.url).query(true).v
+        const videoIdToTrack = id => track => new URI(track.url).query(true).v === id
+
+        const playlist = tracks
+            .map(trackToVideoId)
+            .map(id => id.substring(0, 11)) // Because https://www.youtube.com/watch?v=zhgwRBb48VI?new
+
+        this.player.cuePlaylist(playlist)
+    }
+            
 
     render () {
         return <div ref={this._assignPlayerElement} />
