@@ -33,10 +33,10 @@ class Track extends Component {
             if (playing) {
                 if (playerState === PlayerState.PLAYING) {
                     iconClassName = 'pause'
-                } else if (playerState === PlayerState.PAUSED) {
-                    iconClassName = 'play'
-                } else {
+                } else if (playerState === PlayerState.BUFFERING) {
                     iconClassName = 'notched circle loading'
+                } else {
+                    iconClassName = 'play'
                 }
             } else {
                 iconClassName = 'play'
@@ -45,10 +45,10 @@ class Track extends Component {
             if (playing) {
                 if (playerState === PlayerState.PLAYING) {
                     iconClassName = 'volume up'
-                } else if (playerState === PlayerState.PAUSED) {
-                    iconClassName = 'diabled play'
-                } else {
+                } else if (playerState === PlayerState.BUFFERING) {
                     iconClassName = 'notched circle loading'
+                } else {
+                    iconClassName = 'diabled play'
                 }
             } else {
                 iconClassName = 'disabled play'

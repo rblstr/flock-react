@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import { hashHistory, Link } from 'react-router'
 
 import { updateSubreddits } from '../actions/subreddits'
-import { fetchLinks } from '../actions/links'
+import { fetchLinks, refreshLinks } from '../actions/links'
 import { PlayerState, setPlayerState, setPlayerCurrentTrack } from '../actions/player'
 
 import SubredditSelector from '../components/SubredditSelector.jsx'
@@ -11,6 +11,10 @@ import Player from '../components/Player.jsx'
 import TrackList from '../components/TrackList.jsx'
 
 import { arrayEquals } from '../utils'
+
+import $ from 'jquery'
+$.fn.dropdown = require('semantic-ui-dropdown')
+$.fn.transition = require('semantic-ui-transition')
 
 class Flock extends Component {
 
@@ -25,11 +29,16 @@ class Flock extends Component {
         }
 
         this._assignPlayer = player => this.player = player
+        this._assignTopSelect = ref => {
+            this.$top = $(ref)
+            this.$top.dropdown()
+        }
+
         this._onFetchTracks = subreddits => this.onFetchTracks(subreddits)
         this._onPlayerStateChange = state => dispatch(setPlayerState(state))
         this._onTrackChange = track => dispatch(setPlayerCurrentTrack(track))
         this._onTrackClicked = track => this.onTrackClicked(track)
-        this._onSortChanged = (sort, t='all') => this.onSortChanged(sort, t)
+        this._onSortChanged = (sort, t) => this.onSortChanged(sort, t)
     }
 
     componentWillMount () {
@@ -66,6 +75,10 @@ class Flock extends Component {
             }
         } = nextProps
 
+        const {
+            links
+        } = this.props
+
         if (currentTrack) {
             document.title = `Flock | ${currentTrack.title}`
         } else {
@@ -87,7 +100,11 @@ class Flock extends Component {
         if (sortChanged || subredditsChanged) {
             this.setState({sort, t})
             dispatch(updateSubreddits(splitParamsSubreddits))
-            dispatch(fetchLinks(splitParamsSubreddits, sort, t))
+            if (links && links.length) {
+                dispatch(refreshLinks(splitParamsSubreddits, sort, t))
+            } else {
+                dispatch(fetchLinks(splitParamsSubreddits, sort, t))
+            }
         }
     }
 
@@ -97,8 +114,9 @@ class Flock extends Component {
 
         const sortedSubreddits = subreddits.concat().sort()
         const sortedStateSubreddits = stateSubreddits.concat().sort()
+
         if (!arrayEquals(sortedSubreddits, sortedStateSubreddits)) {
-            hashHistory.push(`${subreddits.join('+')}`)
+            hashHistory.push(`${subreddits.join('+')}/${sort}/${t}`)
         }
     }
 
@@ -122,18 +140,24 @@ class Flock extends Component {
         }
     }
 
-    onSortChanged (sort, t) {
+    onSortChanged (sort, t='all') {
         const { subreddits } = this.props
         const { sort: stateSort, t: stateT } = this.state
 
         if (stateSort !== sort || stateT !== t) {
             hashHistory.push(`${subreddits.join('+')}/${sort}/${t}`)
+            if (sort === 'top') {
+                this.$drop.dropdown('set selected', t)
+            } else {
+                this.$drop.dropdown('clear')
+            }
         }
     }
 
     render () {
         const {
             isFetching,
+            isRefreshing,
             links,
             error,
             playerState,
@@ -141,6 +165,20 @@ class Flock extends Component {
         } = this.props
 
         const { sort, t } = this.state
+
+        let hotClassName = ''
+        if (sort === 'hot') {
+            if (isRefreshing) {
+                hotClassName = 'primary loading'
+            } else {
+                hotClassName = 'primary'
+            }
+        }
+
+        let topClassName = ''
+        if (sort === 'top' && isRefreshing) {
+            topClassName = 'loading'
+        }
 
         return (
             <div className="ui text container">
@@ -159,32 +197,45 @@ class Flock extends Component {
                         </div>
                     }
                 </div>
-                { (links && links.length > 0) ? (
+                { (links && links.length > 0 || isRefreshing) ? (
                     <div className="ui one column grid">
                         <div className="row">
                             <div className="column">
-                                <button
-                                    className={`ui ${sort === 'hot' ? 'primary ' : ''}button`}
-                                    onClick={event => this._onSortChanged('hot')}
-                                >
-                                    Hot
-                                </button>
-                                <select
-                                    value={sort === 'top' ? t : ''}
-                                    onChange={event => this._onSortChanged('top', event.target.value)}
-                                >
-                                    <option value="">Top</option>
-                                    <option value="all">All</option>
-                                    <option value="year">Year</option>
-                                    <option value="month">Month</option>
-                                    <option value="week">Week</option>
-                                    <option value="day">Day</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="center aligned row">
-                            <div className="column">
-                                <div className="ui inverted segment">
+                                <div className="ui top attached segment">
+                                    <button
+                                        className={`ui ${hotClassName} button`}
+                                        onClick={event => this._onSortChanged('hot')}
+                                    >
+                                        Hot
+                                    </button>
+                                    <div
+                                        className={`ui compact selection dropdown ${topClassName} button`}
+                                        ref={ref => {
+                                            this.$drop = $(ref)
+                                            this.$drop.dropdown({
+                                                // action: 'activate',
+                                                action: (text, value) => {
+                                                    console.log(text, value)
+                                                    this.$drop.dropdown('set selected', value)
+                                                    this.$drop.dropdown('hide')
+                                                    setTimeout(() => this._onSortChanged('top', value), 0)
+                                                }
+                                            })
+                                        }}
+                                        data-value={sort === 'top' ? t : null}
+                                    >
+                                        <div className="default text">Top</div>
+                                        <i className="dropdown icon"></i>
+                                        <div className="menu">
+                                            <a className="item" data-value="all">All</a>
+                                            <a className="item" data-value="year">Year</a>
+                                            <a className="item" data-value="month">Month</a>
+                                            <a className="item" data-value="week">Week</a>
+                                            <a className="item" data-value="day">Day</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`ui inverted center aligned attached ${isRefreshing ? 'loading' : ''} segment`}>
                                     <Player
                                         tracks={links}
                                         currentTrack={playerState.currentTrack}
@@ -234,12 +285,15 @@ class Flock extends Component {
 }
 
 const mapStateToProps = ({ subreddits, links, player }) => {
-    const playerState = {...player}
-    playerState.currentTrack = links.links.find(track => track.id === playerState.currentTrack)
+    const playerState = {
+        ...player,
+        currentTrack: links.links.find(track => track.id === player.currentTrack)
+    }
 
     return {
         subreddits,
         isFetching: links.isFetching,
+        isRefreshing: links.isRefreshing,
         links: links.links,
         error: links.error,
         playerState

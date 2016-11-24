@@ -16,7 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "immutable": "^3.8.1",
-    "jquery": "^3.1.0",
+    "jquery": "^3.1.1",
     "react": "^15.3.0",
     "react-dom": "^15.3.0",
     "react-redux": "^4.4.5",
@@ -25,6 +25,8 @@
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
     "semantic-ui": "^2.2.2",
+    "semantic-ui-dropdown": "^2.2.3",
+    "semantic-ui-transition": "^2.2.3",
     "urijs": "^1.18.1",
     "whatwg-fetch": "^1.0.0",
     "youtube-player": "^3.0.4"
