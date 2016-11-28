@@ -5,14 +5,14 @@ class SubredditSelector extends Component {
     constructor (props) {
         super(props)
 
-        const { fetchTracks } = this.props
+        const { onFetchTracks } = this.props
 
         this._assignSubredditField = ref => this.subredditField = ref
         this._onSubmit = event => {
             event.preventDefault()
             const subreddits = this.subredditField.value
                 .trim().split(' ').filter(subreddit => subreddit)
-            fetchTracks(subreddits)
+            onFetchTracks(subreddits)
         }
     }
 

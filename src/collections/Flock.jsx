@@ -30,8 +30,14 @@ class Flock extends Component {
 
         this._assignPlayer = player => this.player = player
         this._assignTopSelect = ref => {
-            this.$top = $(ref)
-            this.$top.dropdown()
+            this.$topSelector = $(ref)
+            this.$topSelector.dropdown({
+                action: (text, value) => {
+                    this.$topSelector.dropdown('set selected', value)
+                    this.$topSelector.dropdown('hide')
+                    this.onSortChanged('top', value)
+                }
+            })
         }
 
         this._onFetchTracks = subreddits => this.onFetchTracks(subreddits)
@@ -147,9 +153,9 @@ class Flock extends Component {
         if (stateSort !== sort || stateT !== t) {
             hashHistory.push(`${subreddits.join('+')}/${sort}/${t}`)
             if (sort === 'top') {
-                this.$drop.dropdown('set selected', t)
+                this.$topSelector.dropdown('set selected', t)
             } else {
-                this.$drop.dropdown('clear')
+                this.$topSelector.dropdown('clear')
             }
         }
     }
@@ -168,16 +174,7 @@ class Flock extends Component {
 
         let hotClassName = ''
         if (sort === 'hot') {
-            if (isRefreshing) {
-                hotClassName = 'primary loading'
-            } else {
-                hotClassName = 'primary'
-            }
-        }
-
-        let topClassName = ''
-        if (sort === 'top' && isRefreshing) {
-            topClassName = 'loading'
+            hotClassName = 'primary'
         }
 
         return (
@@ -189,7 +186,7 @@ class Flock extends Component {
                     <SubredditSelector
                         subreddits={subreddits}
                         isFetching={isFetching}
-                        fetchTracks={this._onFetchTracks}
+                        onFetchTracks={this._onFetchTracks}
                     />
                     { error &&
                         <div className="ui error message">
@@ -209,19 +206,8 @@ class Flock extends Component {
                                         Hot
                                     </button>
                                     <div
-                                        className={`ui compact selection dropdown ${topClassName} button`}
-                                        ref={ref => {
-                                            this.$drop = $(ref)
-                                            this.$drop.dropdown({
-                                                // action: 'activate',
-                                                action: (text, value) => {
-                                                    console.log(text, value)
-                                                    this.$drop.dropdown('set selected', value)
-                                                    this.$drop.dropdown('hide')
-                                                    setTimeout(() => this._onSortChanged('top', value), 0)
-                                                }
-                                            })
-                                        }}
+                                        className={`ui compact selection dropdown button`}
+                                        ref={this._assignTopSelect}
                                         data-value={sort === 'top' ? t : null}
                                     >
                                         <div className="default text">Top</div>
