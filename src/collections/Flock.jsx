@@ -122,7 +122,7 @@ class Flock extends Component {
         const sortedStateSubreddits = stateSubreddits.concat().sort()
 
         if (!arrayEquals(sortedSubreddits, sortedStateSubreddits)) {
-            hashHistory.push(`${subreddits.join('+')}/${sort}/${t}`)
+            hashHistory.push(`${subreddits.join('+')}/${sort}/${sort === 'top' ? t : ''}`)
         }
     }
 
@@ -151,7 +151,7 @@ class Flock extends Component {
         const { sort: stateSort, t: stateT } = this.state
 
         if (stateSort !== sort || stateT !== t) {
-            hashHistory.push(`${subreddits.join('+')}/${sort}/${t}`)
+            hashHistory.push(`${subreddits.join('+')}/${sort}/${sort === 'top' ? t : ''}`)
             if (sort === 'top') {
                 this.$topSelector.dropdown('set selected', t)
             } else {
@@ -258,9 +258,9 @@ class Flock extends Component {
                 <div className="ui basic footer segment">
                     <div className="ui right aligned container">
                         <h2 className="ui header">
-                            <a href="https://twitter.com/rblstr">@rblstr</a> | <a href="https://github.com/rblstr/flock-react" target="_blank">github.com/rblstr/flock-react</a>
+                            <a href="https://twitter.com/rblstr" target="_blank">@rblstr</a> | <a href="https://github.com/rblstr/flock-react" target="_blank">github.com/rblstr/flock-react</a>
                             <div className="sub header">
-                                <a href="http://flock.rblstr.com">original version</a> by <a href="https://twitter.com/rblstr" target="_blank">@rblstr</a> & <a href="https://twitter.com/rokeeffe" target="_blank">@rokeeffe</a>
+                                <a href="http://flock.rblstr.com" target="_blank">original version</a> by <a href="https://twitter.com/rblstr" target="_blank">@rblstr</a> & <a href="https://twitter.com/rokeeffe" target="_blank">@rokeeffe</a>
                             </div>
                         </h2>
                     </div>
