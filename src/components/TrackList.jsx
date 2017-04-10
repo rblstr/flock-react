@@ -1,23 +1,20 @@
 import React from 'react'
-import Track from './Track.jsx'
 
-const TrackList = ({ tracks, currentTrack, playerState, onTrackClicked }) => {
+import TrackListItem from './TrackListItem.jsx'
+
+const TrackList = ({ tracks, currentTrack, playerState, onPlayTrack }) => {
     return (
-        <div className="ui relaxed divided list">
+        <ol>
             {
-                tracks.map(track => {
-                    return (
-                        <Track
-                            key={track.id}
-                            track={track}
-                            playing={track === currentTrack}
-                            playerState={playerState}
-                            onTrackClicked={onTrackClicked}
-                        />
-                    )
-                })
+                tracks.map(track => <TrackListItem
+                    key={track.id}
+                    track={track}
+                    active={track === currentTrack}
+                    playerState={playerState}
+                    onPlayTrack={onPlayTrack} 
+                />)
             }
-        </div>
+        </ol>
     )
 }
 

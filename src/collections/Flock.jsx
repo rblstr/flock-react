@@ -1,289 +1,149 @@
 import React, { Component } from 'react'
-import { connect } from 'react-redux'
-import { hashHistory, Link } from 'react-router'
 
-import { updateSubreddits } from '../actions/subreddits'
-import { fetchLinks, refreshLinks } from '../actions/links'
-import { PlayerState, setPlayerState, setPlayerCurrentTrack } from '../actions/player'
-
-import SubredditSelector from '../components/SubredditSelector.jsx'
-import Player from '../components/Player.jsx'
 import TrackList from '../components/TrackList.jsx'
+import YouTubePlayerComponent from '../components/YouTubePlayerComponent.jsx'
 
+import Track, { processTracks } from '../Track'
+
+import { REDDIT_LIMIT } from '../constants'
 import { arrayEquals } from '../utils'
 
-import $ from 'jquery'
-$.fn.dropdown = require('semantic-ui-dropdown')
-$.fn.transition = require('semantic-ui-transition')
-
 class Flock extends Component {
-
-    constructor (props) {
+    constructor(props) {
         super(props)
 
-        const { dispatch } = this.props
+        this._refSubredditInput = ref => this._subredditInput = ref
+
+        this._onPlayerStateChange = playerState => this.setState({ playerState })
+        this._onTrackChange = currentTrack => this.setState({ currentTrack })
+
+        this._onPlay = () => {
+            const subreddits = this._subredditInput.value.split(' ')
+            this.setState({
+                isFetching: true,
+                subreddits: subreddits,
+                tracks: [],
+                currentTrack: undefined
+            })
+
+            // setTimeout(
+            //     () => {
+            //         processTracks(EXAMPLE_TRACKS)
+            //             .then(tracks => {
+            //                 const [ currentTrack ] = tracks
+            //                 this.setState({
+            //                     isFetching: false,
+            //                     tracks,
+            //                     currentTrack
+            //                 })
+            //             })
+            //     },
+            //     0
+            // )
+
+            const subredditsUrl = subreddits.filter(s => s).join('+')
+
+            fetch(`https://www.reddit.com/r/${subredditsUrl}.json?limit=${REDDIT_LIMIT}`)
+                .then(response => response.json())
+                .then(json => processTracks(json.data.children.map(child => Track(child.data))))
+                .then(tracks => {
+                    const [ currentTrack ] = tracks
+
+                    this.setState({
+                        isFetching: false,
+                        tracks,
+                        currentTrack
+                    })
+                })
+                .catch(error => {
+                    console.error(error) // eslint-disable-line no-console
+                    this.setState({ isFetching: false })
+                })
+        }
+
+        this._onSubredditInputChange = event => {
+            this.setState({ subreddits: event.target.value.split(' ') })
+        }
 
         this.state = {
-            sort: 'hot',
-            t: 'all'
-        }
-
-        this._assignPlayer = player => this.player = player
-        this._assignTopSelect = ref => {
-            this.$topSelector = $(ref)
-            this.$topSelector.dropdown({
-                action: (text, value) => {
-                    this.$topSelector.dropdown('set selected', value)
-                    this.$topSelector.dropdown('hide')
-                    this.onSortChanged('top', value)
-                }
-            })
-        }
-
-        this._onFetchTracks = subreddits => this.onFetchTracks(subreddits)
-        this._onPlayerStateChange = state => dispatch(setPlayerState(state))
-        this._onTrackChange = track => dispatch(setPlayerCurrentTrack(track))
-        this._onTrackClicked = track => this.onTrackClicked(track)
-        this._onSortChanged = (sort, t) => this.onSortChanged(sort, t)
-    }
-
-    componentWillMount () {
-        let {
-            dispatch,
-            params: {
-                subreddits = '',
-                sort = 'hot',
-                t = 'all'
-            }
-        } = this.props
-
-        this.setState({sort, t})
-
-        const splitSubreddits = subreddits.split('+').filter(subreddit => subreddit)
-
-        if (splitSubreddits && splitSubreddits.length) {
-            dispatch(updateSubreddits(splitSubreddits))
-            dispatch(fetchLinks(splitSubreddits, sort, t))
+            isFetching: false,
+            subreddits: [],
+            tracks: [],
+            currentTrack: undefined,
+            playerState: undefined
         }
     }
 
-    componentWillReceiveProps (nextProps) {
+    shouldComponentUpdate (nextProps, nextState) {
         const {
-            dispatch,
+            isFetching,
             subreddits,
-            params: {
-                subreddits: paramsSubreddits = '',
-                sort = 'hot',
-                t = 'all'
-            },
-            playerState: {
-                currentTrack
-            }
-        } = nextProps
-
-        const {
-            links
-        } = this.props
-
-        if (currentTrack) {
-            document.title = `Flock | ${currentTrack.title}`
-        } else {
-            document.title = 'Flock | subreddit playlister'
-        }
-
-        const {
-            sort: stateSort,
-            t: stateT
+            playerState,
+            currentTrack
         } = this.state
 
-        const splitParamsSubreddits = paramsSubreddits.split('+').filter(subreddit => subreddit)
-        const sortedParamsSubreddits = splitParamsSubreddits.concat().sort()
-        const sortedSubreddits = subreddits.concat().sort()
-
-        const sortChanged = ((stateSort !== sort) || (stateT !== t))
-        const subredditsChanged = !arrayEquals(sortedParamsSubreddits, sortedSubreddits)
-
-        if (sortChanged || subredditsChanged) {
-            this.setState({sort, t})
-            dispatch(updateSubreddits(splitParamsSubreddits))
-            if (links && links.length) {
-                dispatch(refreshLinks(splitParamsSubreddits, sort, t))
-            } else {
-                dispatch(fetchLinks(splitParamsSubreddits, sort, t))
-            }
-        }
-    }
-
-    onFetchTracks (subreddits) {
-        const { sort, t } = this.state
-        const { dispatch, subreddits: stateSubreddits } = this.props
-
-        const sortedSubreddits = subreddits.concat().sort()
-        const sortedStateSubreddits = stateSubreddits.concat().sort()
-
-        if (!arrayEquals(sortedSubreddits, sortedStateSubreddits)) {
-            hashHistory.push(`${subreddits.join('+')}/${sort}/${sort === 'top' ? t : ''}`)
-        }
-    }
-
-    onTrackClicked (track) {
         const {
-            dispatch,
-            playerState: {
-                currentTrack,
-                state
-            }
-        } = this.props
+            isFetching: nextIsFecthing,
+            subreddits: nextSubreddits,
+            playerState: nextPlayerState,
+            currentTrack: nextCurrentTrack
+        } = nextState
 
-        if (track !== currentTrack) {
-            this.player.playTrack(track)
-        } else {
-            if (state === PlayerState.PLAYING) {
-                this.player.pause()
-            } else if (state === PlayerState.PAUSED) {
-                this.player.play()
-            }
-        }
-    }
-
-    onSortChanged (sort, t='all') {
-        const { subreddits } = this.props
-        const { sort: stateSort, t: stateT } = this.state
-
-        if (stateSort !== sort || stateT !== t) {
-            hashHistory.push(`${subreddits.join('+')}/${sort}/${sort === 'top' ? t : ''}`)
-            if (sort === 'top') {
-                this.$topSelector.dropdown('set selected', t)
-            } else {
-                this.$topSelector.dropdown('clear')
-            }
-        }
+        return (
+            isFetching !== nextIsFecthing ||
+            !arrayEquals(subreddits, nextSubreddits) ||
+            playerState !== nextPlayerState ||
+            currentTrack !== nextCurrentTrack
+        )
     }
 
     render () {
         const {
             isFetching,
-            isRefreshing,
-            links,
-            error,
-            playerState,
-            subreddits
-        } = this.props
-
-        const { sort, t } = this.state
-
-        let hotClassName = ''
-        if (sort === 'hot') {
-            hotClassName = 'primary'
-        }
+            subreddits,
+            tracks,
+            currentTrack,
+            playerState
+        } = this.state
 
         return (
-            <div className="ui text container">
-                <div className="ui masthead basic segment">
-                    <Link to="/">
-                        <h1 className="ui yellow header">Flock</h1>
-                    </Link>
-                    <SubredditSelector
-                        subreddits={subreddits}
-                        isFetching={isFetching}
-                        onFetchTracks={this._onFetchTracks}
+            <div>
+                <div>
+                    <h1 style={{ color: '#FD0005' }}>flock</h1>
+                    <input
+                        ref={this._refSubredditInput}
+                        type="text"
+                        placeholder="enter space seperated subeddit names"
+                        value={subreddits.join(' ')}
+                        onChange={this._onSubredditInputChange}
+                        disabled={isFetching}
                     />
-                    { error &&
-                        <div className="ui error message">
-                            <p>{error}</p>
-                        </div>
-                    }
+                    <button
+                        onClick={this._onPlay}
+                        disabled={isFetching}
+                    >
+                        {isFetching ? 'loading' : 'play'}
+                    </button>
                 </div>
-                { (links && links.length > 0 || isRefreshing) ? (
-                    <div className="ui one column grid">
-                        <div className="row">
-                            <div className="column">
-                                <div className="ui top attached segment">
-                                    <button
-                                        className={`ui ${hotClassName} button`}
-                                        onClick={event => this._onSortChanged('hot')}
-                                    >
-                                        Hot
-                                    </button>
-                                    <div
-                                        className={`ui compact selection dropdown button`}
-                                        ref={this._assignTopSelect}
-                                        data-value={sort === 'top' ? t : null}
-                                    >
-                                        <div className="default text">Top</div>
-                                        <i className="dropdown icon"></i>
-                                        <div className="menu">
-                                            <a className="item" data-value="all">All</a>
-                                            <a className="item" data-value="year">Year</a>
-                                            <a className="item" data-value="month">Month</a>
-                                            <a className="item" data-value="week">Week</a>
-                                            <a className="item" data-value="day">Day</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className={`ui inverted center aligned attached ${isRefreshing ? 'loading' : ''} segment`}>
-                                    <Player
-                                        tracks={links}
-                                        currentTrack={playerState.currentTrack}
-                                        onPlayerReady={this._assignPlayer}
-                                        onPlayerStateChange={this._onPlayerStateChange}
-                                        onTrackChange={this._onTrackChange}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="row">
-                            <div className="column">
-                                <div className="ui basic segment">
-                                    <TrackList
-                                        tracks={links}
-                                        currentTrack={playerState.currentTrack}
-                                        playerState={playerState.state}
-                                        onTrackClicked={this._onTrackClicked}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ) : ( !isFetching &&
-                    <div className="ui basic segment">
-                        <div className="ui message">
-                            <h1 className="ui header">Music discovery, powered by Reddit</h1>
-                            <p>Simply enter one or more musical subreddit names and Flock will return a playlist of what's hot for your listening pleasure</p>
-                            <p>Here's a few suggestions to get you going:</p>
-                            <Link to="/chillmusic">ChillMusic</Link> • <Link to="/blues+rock">Blues & Rock</Link> • <Link to="90shiphop">90s HipHop</Link> • <Link to="/futuregarage+futurebeats">FutureGarage & FutureBeats</Link>
-                        </div>
-                    </div>
-                )}
-                <div className="ui basic footer segment">
-                    <div className="ui right aligned container">
-                        <h2 className="ui header">
-                            <a href="https://twitter.com/rblstr" target="_blank">@rblstr</a> | <a href="https://github.com/rblstr/flock-react" target="_blank">github.com/rblstr/flock-react</a>
-                            <div className="sub header">
-                                <a href="http://flock.rblstr.com" target="_blank">original version</a> by <a href="https://twitter.com/rblstr" target="_blank">@rblstr</a> & <a href="https://twitter.com/rokeeffe" target="_blank">@rokeeffe</a>
-                            </div>
-                        </h2>
-                    </div>
+                <div style={{ display: !tracks.length ? 'none' : undefined }}>
+                    <YouTubePlayerComponent
+                        currentTrack={currentTrack}
+                        onPlayerStateChange={this._onPlayerStateChange}
+                        tracks={tracks}
+                        onTrackChange={this._onTrackChange}
+                    />
                 </div>
+                { tracks && tracks.length > 0 &&
+                    <TrackList
+                        tracks={tracks}
+                        currentTrack={currentTrack}
+                        playerState={playerState}
+                        onPlayTrack={this._onTrackChange}
+                    />
+                }
             </div>
         )
     }
 }
 
-const mapStateToProps = ({ subreddits, links, player }) => {
-    const playerState = {
-        ...player,
-        currentTrack: links.links.find(track => track.id === player.currentTrack)
-    }
-
-    return {
-        subreddits,
-        isFetching: links.isFetching,
-        isRefreshing: links.isRefreshing,
-        links: links.links,
-        error: links.error,
-        playerState
-    }
-}
-
-export default connect(mapStateToProps)(Flock)
+export default Flock
