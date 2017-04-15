@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import URI from 'urijs'
 
 import TrackList from '../components/TrackList.jsx'
 import YouTubePlayerComponent from '../components/YouTubePlayerComponent.jsx'
@@ -7,6 +8,8 @@ import Track, { processTracks } from '../Track'
 
 import { REDDIT_LIMIT } from '../constants'
 import { arrayEquals } from '../utils'
+
+const compareById = (lhs, rhs) => lhs.id === rhs.id
 
 class Flock extends Component {
     constructor(props) {
@@ -17,35 +20,56 @@ class Flock extends Component {
         this._onPlayerStateChange = playerState => this.setState({ playerState })
         this._onTrackChange = currentTrack => this.setState({ currentTrack })
 
+        this._onPlaylistLoaded = playlist => {
+            const { tracks } = this.state
+            this.setState({
+                tracks: tracks.filter(track => playlist.includes(URI(track.url).query(true).v))
+            })
+        }
+
         this._onPlay = () => {
+
+            const { history } = this.props
+
             const subreddits = this._subredditInput.value.split(' ')
+
+            if (subreddits.length === 0) {
+                return
+            }
+
+            history.push(subreddits.join('+'))
+        }
+
+        this._onSubredditInputChange = event => {
+            this.setState({ subreddits: event.target.value.split(' ') })
+        }
+
+        this._fetchSubreddits = subreddits => {
             this.setState({
                 isFetching: true,
                 subreddits: subreddits,
                 tracks: [],
-                currentTrack: undefined
+                currentTrack: undefined,
+                error: undefined
             })
-
-            // setTimeout(
-            //     () => {
-            //         processTracks(EXAMPLE_TRACKS)
-            //             .then(tracks => {
-            //                 const [ currentTrack ] = tracks
-            //                 this.setState({
-            //                     isFetching: false,
-            //                     tracks,
-            //                     currentTrack
-            //                 })
-            //             })
-            //     },
-            //     0
-            // )
 
             const subredditsUrl = subreddits.filter(s => s).join('+')
 
             fetch(`https://www.reddit.com/r/${subredditsUrl}.json?limit=${REDDIT_LIMIT}`)
-                .then(response => response.json())
-                .then(json => processTracks(json.data.children.map(child => Track(child.data))))
+                .then(response => {
+                    if (response.ok) {
+                        return response.json()
+                    } else {
+                        throw new Error('Error response from Reddit')
+                    }
+                })
+                .then(json => {
+                    if (!json.error) {
+                        return processTracks(json.data.children.map(child => Track(child.data)))
+                    } else {
+                        throw new Error('Error response from Reddit')
+                    }
+                })
                 .then(tracks => {
                     const [ currentTrack ] = tracks
 
@@ -56,13 +80,16 @@ class Flock extends Component {
                     })
                 })
                 .catch(error => {
-                    console.error(error) // eslint-disable-line no-console
-                    this.setState({ isFetching: false })
+                    /* eslint-disable no-console */
+                    console.error(error.message)
+                    /* eslint-enable no-console */
+                    this.setState({
+                        isFetching: false,
+                        tracks: [],
+                        currentTrack: undefined,
+                        error: error.message
+                    })
                 })
-        }
-
-        this._onSubredditInputChange = event => {
-            this.setState({ subreddits: event.target.value.split(' ') })
         }
 
         this.state = {
@@ -74,26 +101,47 @@ class Flock extends Component {
         }
     }
 
+    componentDidMount () {
+        const { subreddits } = this.props.match.params
+
+        this._fetchSubreddits(subreddits.split('+'))
+    }
+
+    componentWillReceiveProps (nextProps) {
+        const { subreddits } = this.props.match.params
+        const { subreddits: nextSubreddits } = nextProps.match.params
+
+        if (!arrayEquals(subreddits.split('+'), nextSubreddits.split('+'))) {
+            this._fetchSubreddits(nextSubreddits.split('+'))
+        }
+    }
+
     shouldComponentUpdate (nextProps, nextState) {
         const {
             isFetching,
             subreddits,
             playerState,
-            currentTrack
+            currentTrack,
+            tracks,
+            error
         } = this.state
 
         const {
             isFetching: nextIsFecthing,
             subreddits: nextSubreddits,
             playerState: nextPlayerState,
-            currentTrack: nextCurrentTrack
+            currentTrack: nextCurrentTrack,
+            tracks: nextTracks,
+            error: nextError
         } = nextState
 
         return (
             isFetching !== nextIsFecthing ||
             !arrayEquals(subreddits, nextSubreddits) ||
             playerState !== nextPlayerState ||
-            currentTrack !== nextCurrentTrack
+            currentTrack !== nextCurrentTrack ||
+            !arrayEquals(tracks, nextTracks, compareById) ||
+            error !== nextError
         )
     }
 
@@ -103,7 +151,8 @@ class Flock extends Component {
             subreddits,
             tracks,
             currentTrack,
-            playerState
+            playerState,
+            error
         } = this.state
 
         return (
@@ -118,9 +167,10 @@ class Flock extends Component {
                         onChange={this._onSubredditInputChange}
                         disabled={isFetching}
                     />
+                    { error && <span style={{ color: '#FF0000' }}>{error}</span> }
                     <button
                         onClick={this._onPlay}
-                        disabled={isFetching}
+                        disabled={isFetching || subreddits.length === 0}
                     >
                         {isFetching ? 'loading' : 'play'}
                     </button>
@@ -128,9 +178,10 @@ class Flock extends Component {
                 <div style={{ display: !tracks.length ? 'none' : undefined }}>
                     <YouTubePlayerComponent
                         currentTrack={currentTrack}
-                        onPlayerStateChange={this._onPlayerStateChange}
                         tracks={tracks}
+                        onPlayerStateChange={this._onPlayerStateChange}
                         onTrackChange={this._onTrackChange}
+                        onPlaylistLoaded={this._onPlaylistLoaded}
                     />
                 </div>
                 { tracks && tracks.length > 0 &&

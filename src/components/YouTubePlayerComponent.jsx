@@ -19,13 +19,18 @@ class YouTubePlayerComponent extends Component {
         super(props)
 
         this._refPlayerElement = ref => this._playerElement = ref
+
+        this.state = {
+            playlist: []
+        }
     }
 
     componentDidMount () {
         const {
             onPlayerStateChange,
             onTrackChange,
-            tracks
+            tracks,
+            onPlaylistLoaded
         } = this.props
 
         const [ first, ...playlist ] = tracks.map(trackToVideoId)
@@ -38,6 +43,8 @@ class YouTubePlayerComponent extends Component {
 
         this.player.on('stateChange', event => {
             onPlayerStateChange(event.data)
+
+            this.player.getPlaylist().then(onPlaylistLoaded)
 
             this.player.getVideoUrl()
                 .then(url => {
@@ -56,10 +63,15 @@ class YouTubePlayerComponent extends Component {
         const { tracks: nextTracks, currentTrack: nextCurrentTrack } = nextProps
 
         if (!arrayEquals(currentTracks, nextTracks)) {
-            this.player.cuePlaylist(nextTracks.map(trackToVideoId))
+            this.player
+                .cuePlaylist(nextTracks.map(trackToVideoId))
+                .then(player => player.getPlayList())
+                .then(this.props.onPlaylistLoaded)
         }
 
-        if (currentTrack !== nextCurrentTrack) {
+        if (!nextCurrentTrack) {
+            this.player.pauseVideo()
+        } if (currentTrack !== nextCurrentTrack) {
             this.player.playVideoAt(nextTracks.findIndex(track => track === nextCurrentTrack))
         }
     }
